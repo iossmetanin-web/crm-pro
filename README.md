@@ -1,94 +1,94 @@
 # CRM Pro - Production-Ready PWA CRM System
 
-A fully functional PWA CRM system for teams of 3-10 people, built with Next.js 15, TypeScript, TailwindCSS, and Prisma.
+Полнофункциональная PWA CRM-система для команд из 3-10 человек, построенная на Next.js 15, TypeScript, TailwindCSS и Prisma.
 
-## Features
+## Возможности
 
-### Core Features
-- **Authentication** - Email/password login with role-based access (Admin/Manager)
-- **Task Management** - Kanban board with drag-and-drop, overdue tracking
-- **Client Management** - Full CRUD operations with contact history
-- **Deal Pipeline** - Sales pipeline with stages and probability tracking
-- **Analytics Dashboard** - KPIs, charts, and team performance metrics
-- **PWA Support** - Installable app with offline support
+### Основной функционал
+- **Аутентификация** - Вход по email/паролю с ролевым доступом (Admin/Manager)
+- **Управление задачами** - Kanban-доска с drag-and-drop, отслеживание просроченных
+- **Управление клиентами** - Полный CRUD с историей контактов
+- **Воронка сделок** - Этапы продаж с отслеживанием вероятности
+- **Аналитика** - KPI, графики, метрики производительности команды
+- **PWA** - Устанавливаемое приложение с офлайн-поддержкой
 
-### Technical Features
-- **Row Level Security** - Database-level access control
-- **Responsive Design** - Mobile-first with bottom navigation
-- **Dark/Light Theme** - Automatic system detection
-- **Real-time Updates** - SWR for data synchronization
-- **Type-Safe** - Full TypeScript coverage
+### Технические особенности
+- **Адаптивный дизайн** - Mobile-first с нижней навигацией
+- **Темная/Светлая тема** - Автоматическое определение системы
+- **Обновления в реальном времени** - SWR для синхронизации данных
+- **Type-Safe** - Полное покрытие TypeScript
 
-## Tech Stack
+## Технологии
 
 - **Frontend**: Next.js 15 (App Router), TypeScript, TailwindCSS, ShadCN UI
 - **State Management**: Zustand
 - **Data Fetching**: SWR
-- **Database**: SQLite (Prisma) / PostgreSQL (Supabase)
+- **Database**: SQLite (локально) / PostgreSQL (продакшн)
 - **Authentication**: NextAuth.js
 - **PWA**: Service Worker, Web App Manifest
 - **Charts**: Recharts
 
-## Getting Started
+## Быстрый старт
 
-### Prerequisites
-- Node.js 18+ or Bun
-- npm, yarn, or bun
+### Требования
+- Node.js 18+ или Bun
+- npm, yarn, или bun
 
-### Installation
+### Установка
 
 ```bash
-# Clone the repository
+# Клонировать репозиторий
 git clone <your-repo-url>
 cd crm-pro
 
-# Install dependencies
+# Установить зависимости
 bun install
 
-# Set up environment variables
+# Создать .env файл
 cp .env.example .env
 
-# Generate Prisma client
+# Сгенерировать Prisma клиент
 bun run db:generate
 
-# Push database schema
+# Создать схему базы данных
 bun run db:push
 
-# Seed the database (creates admin + 5 managers)
+# Заполнить базу демо-данными (создает admin + 5 менеджеров)
 curl -X POST http://localhost:3000/api/seed
-```
 
-### Environment Variables
-
-Create a `.env` file with:
-
-```env
-# Database
-DATABASE_URL="file:./dev.db"
-
-# NextAuth
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-secret-key-here"
-
-# Optional: Supabase
-# NEXT_PUBLIC_SUPABASE_URL="your-supabase-url"
-# NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
-```
-
-### Running the Development Server
-
-```bash
+# Запустить сервер разработки
 bun run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Откройте [http://localhost:3000](http://localhost:3000) в браузере.
 
-## Demo Accounts
+### Переменные окружения
 
-After running the seed script:
+Создайте файл `.env`:
 
-| Role | Email | Password |
-|------|-------|----------|
+```env
+# База данных (SQLite для локальной разработки)
+DATABASE_URL="file:./dev.db"
+
+# NextAuth (обязательно!)
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="ваш-секретный-ключ-минимум-32-символа"
+
+# Для продакшена (PostgreSQL)
+# DATABASE_URL="postgresql://user:password@host:5432/database"
+```
+
+Для генерации NEXTAUTH_SECRET:
+```bash
+openssl rand -base64 32
+```
+
+## Демо-аккаунты
+
+После запуска seed-скрипта:
+
+| Роль | Email | Пароль |
+|------|-------|--------|
 | Admin | admin@crm.com | admin123 |
 | Manager 1 | manager1@crm.com | manager123 |
 | Manager 2 | manager2@crm.com | manager123 |
@@ -96,154 +96,176 @@ After running the seed script:
 | Manager 4 | manager4@crm.com | manager123 |
 | Manager 5 | manager5@crm.com | manager123 |
 
-## Pages
+## Страницы
 
-| Route | Description |
-|-------|-------------|
-| `/login` | Authentication page |
-| `/` (Today) | Dashboard with today's tasks and overdue items |
-| `/tasks` | Kanban board with drag-and-drop |
-| `/clients` | Client management with CRUD |
-| `/deals` | Sales pipeline management |
-| `/analytics` | KPIs and performance charts |
+| Маршрут | Описание |
+|---------|----------|
+| `/login` | Страница аутентификации |
+| `/` (Today) | Дашборд с задачами на сегодня и просроченными |
+| `/tasks` | Kanban-доска с drag-and-drop |
+| `/clients` | Управление клиентами с CRUD |
+| `/deals` | Управление воронкой продаж |
+| `/analytics` | KPI и графики производительности |
 
 ## API Routes
 
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET/POST | `/api/tasks` | List/Create tasks |
-| GET/PUT/DELETE | `/api/tasks/[id]` | Task CRUD |
-| GET/POST | `/api/clients` | List/Create clients |
-| GET/PUT/DELETE | `/api/clients/[id]` | Client CRUD |
-| GET/POST | `/api/deals` | List/Create deals |
-| GET/PUT/DELETE | `/api/deals/[id]` | Deal CRUD |
-| POST | `/api/seed` | Seed database |
-| DELETE | `/api/seed` | Clear database |
+| Метод | Маршрут | Описание |
+|-------|---------|----------|
+| GET/POST | `/api/tasks` | Список/Создание задач |
+| GET/PUT/DELETE | `/api/tasks/[id]` | CRUD задачи |
+| GET/POST | `/api/clients` | Список/Создание клиентов |
+| GET/PUT/DELETE | `/api/clients/[id]` | CRUD клиента |
+| GET/POST | `/api/deals` | Список/Создание сделок |
+| GET/PUT/DELETE | `/api/deals/[id]` | CRUD сделки |
+| POST | `/api/seed` | Заполнить базу данных |
+| DELETE | `/api/seed` | Очистить базу данных |
 
-## PWA Installation
+## Развертывание (Deployment)
 
-### Desktop (Chrome/Edge)
-1. Navigate to the app URL
-2. Click the install icon in the address bar
-3. Click "Install"
+### Вариант 1: Docker (Рекомендуется)
 
-### Mobile (iOS)
-1. Open in Safari
-2. Tap the Share button
-3. Select "Add to Home Screen"
+```dockerfile
+# Dockerfile
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npx prisma generate
+RUN npm run build
 
-### Mobile (Android)
-1. Open in Chrome
-2. Tap the menu button
-3. Select "Add to Home Screen"
-
-## Deploying to Vercel
-
-### Option 1: Vercel CLI
+FROM node:20-alpine AS runner
+WORKDIR /app
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/prisma ./prisma
+EXPOSE 3000
+ENV NODE_ENV=production
+CMD ["node", "server.js"]
+```
 
 ```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy
-vercel
+# Сборка и запуск
+docker build -t crm-pro .
+docker run -p 3000:3000 -e DATABASE_URL="..." -e NEXTAUTH_SECRET="..." -e NEXTAUTH_URL="http://localhost:3000" crm-pro
 ```
 
-### Option 2: GitHub Integration
+### Вариант 2: VPS/VDS (Vultr, DigitalOcean, Hetzner)
 
-1. Push your code to GitHub
-2. Import project in Vercel Dashboard
-3. Configure environment variables
-4. Deploy
+```bash
+# 1. Установить Node.js и PM2
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+sudo npm install -g pm2
 
-### Environment Variables for Vercel
+# 2. Клонировать проект
+git clone <your-repo> && cd crm-pro
+npm install
 
-Set these in your Vercel project settings:
+# 3. Настроить .env
+nano .env
 
-```
-DATABASE_URL=<your-database-url>
-NEXTAUTH_URL=<your-vercel-url>
-NEXTAUTH_SECRET=<generate-with-openssl-rand-base64-32>
-```
+# 4. Собрать и запустить
+npx prisma generate
+npx prisma db push
+npm run build
+pm2 start npm --name "crm-pro" -- start
 
-## Using with Supabase
-
-### 1. Create Supabase Project
-
-1. Go to [supabase.com](https://supabase.com)
-2. Create a new project
-3. Note your project URL and anon key
-
-### 2. Run SQL Schema
-
-1. Go to SQL Editor in Supabase Dashboard
-2. Copy contents of `supabase-schema.sql`
-3. Execute the SQL
-
-### 3. Configure Environment
-
-```env
-DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres"
-NEXT_PUBLIC_SUPABASE_URL="https://[PROJECT-REF].supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
+# 5. Настроить nginx (опционально)
+sudo nano /etc/nginx/sites-available/crm-pro
 ```
 
-### 4. Enable Auth
+### Вариант 3: Vercel / Netlify
 
-1. Go to Authentication > Providers
-2. Enable Email provider
-3. Configure email templates
+Для serverless-платформ нужна внешняя база данных (PostgreSQL):
 
-## Project Structure
+1. Создайте базу на Supabase, Neon, или PlanetScale
+2. Выполните SQL из `supabase-schema.sql`
+3. Настройте переменные окружения:
+```
+DATABASE_URL=postgresql://...
+NEXTAUTH_URL=https://ваш-домен.com
+NEXTAUTH_SECRET=сгенерированный-ключ
+```
+
+### Вариант 4: Supabase + Vercel
+
+```bash
+# 1. Создать проект на supabase.com
+# 2. Выполнить SQL из supabase-schema.sql в SQL Editor
+# 3. Получить строки подключения
+
+# Переменные окружения:
+DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres"
+NEXTAUTH_URL="https://your-app.vercel.app"
+NEXTAUTH_SECRET="your-secret-key"
+```
+
+## Структура проекта
 
 ```
 ├── prisma/
-│   └── schema.prisma       # Database schema
+│   └── schema.prisma       # Схема базы данных
 ├── public/
-│   ├── icons/              # PWA icons
-│   ├── manifest.json       # PWA manifest
-│   ├── sw.js              # Service worker
-│   └── offline.html       # Offline page
+│   ├── icons/              # PWA иконки
+│   ├── manifest.json       # PWA манифест
+│   ├── sw.js               # Service worker
+│   └── offline.html        # Офлайн страница
 ├── src/
 │   ├── app/
-│   │   ├── (app)/         # Authenticated routes
-│   │   │   ├── page.tsx   # Today/Dashboard
-│   │   │   ├── tasks/     # Tasks page
-│   │   │   ├── clients/   # Clients page
-│   │   │   ├── deals/     # Deals page
-│   │   │   └── analytics/ # Analytics page
-│   │   ├── (auth)/        # Auth routes
-│   │   │   └── login/     # Login page
-│   │   ├── api/           # API routes
-│   │   └── layout.tsx     # Root layout
+│   │   ├── (app)/          # Защищенные маршруты
+│   │   │   ├── page.tsx    # Today/Dashboard
+│   │   │   ├── tasks/      # Страница задач
+│   │   │   ├── clients/    # Страница клиентов
+│   │   │   ├── deals/      # Страница сделок
+│   │   │   └── analytics/  # Аналитика
+│   │   ├── (auth)/         # Auth маршруты
+│   │   │   └── login/      # Страница входа
+│   │   ├── api/            # API маршруты
+│   │   └── layout.tsx      # Root layout
 │   ├── components/
-│   │   ├── layout/        # Layout components
-│   │   ├── providers/     # Context providers
-│   │   └── ui/            # UI components (ShadCN)
-│   ├── hooks/             # Custom hooks
+│   │   ├── layout/         # Компоненты布局
+│   │   ├── providers/      # Context providers
+│   │   └── ui/             # UI компоненты (ShadCN)
+│   ├── hooks/              # Кастомные хуки
 │   ├── lib/
-│   │   ├── auth/          # Auth configuration
-│   │   ├── db.ts          # Prisma client
-│   │   └── utils.ts       # Utility functions
-│   └── stores/            # Zustand stores
-├── supabase-schema.sql    # Supabase SQL schema
+│   │   ├── auth/           # Конфигурация аутентификации
+│   │   ├── db.ts           # Prisma клиент
+│   │   └── utils.ts        # Утилиты
+│   └── stores/             # Zustand stores
+├── supabase-schema.sql     # SQL схема для PostgreSQL
 └── package.json
 ```
 
-## Scripts
+## Скрипты
 
 ```bash
-bun run dev       # Start development server
-bun run build     # Build for production
-bun run lint      # Run ESLint
-bun run db:push   # Push schema changes
-bun run db:generate # Generate Prisma client
+bun run dev         # Запуск сервера разработки
+bun run build       # Сборка для продакшена
+bun run start       # Запуск продакшн-сервера
+bun run lint        # Проверка ESLint
+bun run db:push     # Применить схему к базе
+bun run db:generate # Сгенерировать Prisma клиент
 ```
 
-## License
+## PWA Установка
 
-MIT License - feel free to use for personal or commercial projects.
+### Desktop (Chrome/Edge)
+1. Откройте приложение
+2. Нажмите иконку установки в адресной строке
+3. Нажмите "Установить"
 
-## Support
+### Mobile (iOS)
+1. Откройте в Safari
+2. Нажмите кнопку "Поделиться"
+3. Выберите "На экран Домой"
 
-For issues or questions, please open an issue on GitHub.
+### Mobile (Android)
+1. Откройте в Chrome
+2. Нажмите меню
+3. Выберите "Добавить на главный экран"
+
+## Лицензия
+
+MIT License - свободно используйте для личных и коммерческих проектов.
