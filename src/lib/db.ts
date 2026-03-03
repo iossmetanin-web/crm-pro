@@ -7,11 +7,20 @@ const globalForPrisma = globalThis as unknown as {
 // Check if we're in demo mode (Vercel without database connection)
 // Demo mode is enabled when:
 // 1. DEMO_MODE is explicitly set to 'true'
-// 2. DATABASE_URL is not set
-// 3. DATABASE_URL contains 'file:' (SQLite) and we're in Vercel/production
+// 2. We're on Vercel (VERCEL=1) without a proper PostgreSQL database URL
+// 3. DATABASE_URL is not set
+const isVercelDemoMode = 
+  process.env.VERCEL === '1' && 
+  (!process.env.DATABASE_URL || 
+   process.env.DATABASE_URL.startsWith('file:') ||
+   !process.env.DATABASE_URL.includes('supabase') &&
+   !process.env.DATABASE_URL.includes('neon') &&
+   !process.env.DATABASE_URL.includes('planetscale') &&
+   !process.env.DATABASE_URL.includes('postgresql://'))
+
 const isDemoMode = process.env.DEMO_MODE === 'true' || 
   !process.env.DATABASE_URL ||
-  (process.env.VERCEL === '1' && process.env.DATABASE_URL?.startsWith('file:'))
+  isVercelDemoMode
 
 let _db: PrismaClient | null = null
 
@@ -25,7 +34,7 @@ if (!isDemoMode) {
       globalForPrisma.prisma = _db
     }
   } catch (error) {
-    console.warn('Database connection failed, using demo mode:', error)
+    console.warn('Database connection failed, using demo mode')
   }
 }
 
