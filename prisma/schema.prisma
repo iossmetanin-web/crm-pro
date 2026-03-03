@@ -1,0 +1,163 @@
+// CRM System Prisma Schema
+// Production-ready schema with roles, relationships, and audit trails
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User roles: ADMIN, MANAGER
+enum UserRole {
+  ADMIN
+  MANAGER
+}
+
+// Task status for Kanban board
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+// Deal stages for sales pipeline
+enum DealStage {
+  LEAD
+  PROSPECT
+  PROPOSAL
+  NEGOTIATION
+  CLOSED_WON
+  CLOSED_LOST
+}
+
+// Task priority levels
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// User model - supports authentication with roles
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  name          String
+  password      String     // Hashed password
+  role          UserRole   @default(MANAGER)
+  avatar        String?
+  isActive      Boolean    @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  // Relations
+  clients       Client[]
+  deals         Deal[]
+  tasks         Task[]
+  taskLogs      TaskLog[]
+
+  @@index([email])
+  @@index([role])
+}
+
+// Client/Contact model
+model Client {
+  id            String      @id @default(cuid())
+  name          String
+  email         String
+  phone         String?
+  company       String?
+  position      String?
+  address       String?
+  notes         String?
+  source        String?     // How they found us
+  status        String      @default("active") // active, inactive, churned
+  ownerId       String      // Assigned user
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  owner         User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  deals         Deal[]
+  tasks         Task[]
+
+  @@index([ownerId])
+  @@index([status])
+}
+
+// Deal/Opportunity model
+model Deal {
+  id            String      @id @default(cuid())
+  title         String
+  description   String?
+  value         Float       @default(0)
+  stage         DealStage   @default(LEAD)
+  probability   Int         @default(0) // 0-100 percentage
+  expectedClose DateTime?
+  clientId      String
+  ownerId       String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  client        Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  owner         User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  tasks         Task[]
+
+  @@index([stage])
+  @@index([ownerId])
+  @@index([clientId])
+}
+
+// Task model with Kanban support
+model Task {
+  id            String       @id @default(cuid())
+  title         String
+  description   String?
+  status        TaskStatus   @default(TODO)
+  priority      TaskPriority @default(MEDIUM)
+  dueDate       DateTime?
+  completedAt   DateTime?
+  clientId      String?
+  dealId        String?
+  ownerId       String
+  parentId      String?      // For subtasks
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  // Relations
+  client        Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  deal          Deal?        @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  owner         User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  parent        Task?        @relation("Subtasks", fields: [parentId], references: [id], onDelete: SetNull)
+  subtasks      Task[]       @relation("Subtasks")
+  logs          TaskLog[]
+
+  @@index([status])
+  @@index([ownerId])
+  @@index([dueDate])
+  @@index([priority])
+}
+
+// Task log for activity tracking
+model TaskLog {
+  id            String      @id @default(cuid())
+  taskId        String
+  userId        String
+  action        String      // created, updated, completed, commented, etc.
+  details       String?     // JSON string for additional data
+  createdAt     DateTime    @default(now())
+
+  // Relations
+  task          Task        @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([userId])
+  @@index([createdAt])
+}
