@@ -103,7 +103,6 @@ async function verifyPassword(password: string, hashedPassword: string): Promise
 }
 
 export const authOptions: NextAuthOptions = {
-  adapter: isDemo ? undefined : (db ? PrismaAdapter(db) : undefined),
   session: {
     strategy: "jwt",
     maxAge: 7 * 24 * 60 * 60, // 7 days
