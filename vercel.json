@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "prisma generate && next build",
+  "env": {
+    "DEMO_MODE": "true",
+    "NEXTAUTH_SECRET": "crm-pro-demo-secret-key-for-vercel-deployment-2024",
+    "NEXTAUTH_URL": "https://crm-pro.vercel.app"
+  }
+}
