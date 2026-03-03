@@ -1,9 +1,9 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { db } from "@/lib/db";
-import { compare } from "bcrypt";
+import { db, isDemo } from "@/lib/db";
 import { UserRole } from "@prisma/client";
+
+// Note: PrismaAdapter is not used because we use JWT strategy
 
 declare module "next-auth" {
   interface Session {
@@ -35,6 +35,59 @@ declare module "next-auth/jwt" {
   }
 }
 
+// Demo users for Vercel deployment without database
+const demoUsers: Record<string, { id: string; email: string; name: string; role: UserRole; password: string }> = {
+  "admin@crm.com": {
+    id: "user-admin",
+    email: "admin@crm.com",
+    name: "Admin User",
+    role: "ADMIN" as UserRole,
+    password: "admin123",
+  },
+  "manager@crm.com": {
+    id: "user-manager-1",
+    email: "manager@crm.com",
+    name: "Sarah Johnson",
+    role: "MANAGER" as UserRole,
+    password: "manager123",
+  },
+  "manager1@crm.com": {
+    id: "user-manager-1",
+    email: "manager1@crm.com",
+    name: "Sarah Johnson",
+    role: "MANAGER" as UserRole,
+    password: "manager123",
+  },
+  "manager2@crm.com": {
+    id: "user-manager-2",
+    email: "manager2@crm.com",
+    name: "Mike Wilson",
+    role: "MANAGER" as UserRole,
+    password: "manager123",
+  },
+  "manager3@crm.com": {
+    id: "user-manager-3",
+    email: "manager3@crm.com",
+    name: "Emily Davis",
+    role: "MANAGER" as UserRole,
+    password: "manager123",
+  },
+  "manager4@crm.com": {
+    id: "user-manager-4",
+    email: "manager4@crm.com",
+    name: "James Brown",
+    role: "MANAGER" as UserRole,
+    password: "manager123",
+  },
+  "manager5@crm.com": {
+    id: "user-manager-5",
+    email: "manager5@crm.com",
+    name: "Lisa Anderson",
+    role: "MANAGER" as UserRole,
+    password: "manager123",
+  },
+};
+
 // Simple hash function for demo (use bcrypt in production)
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -50,7 +103,7 @@ async function verifyPassword(password: string, hashedPassword: string): Promise
 }
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(db),
+  adapter: isDemo ? undefined : (db ? PrismaAdapter(db) : undefined),
   session: {
     strategy: "jwt",
     maxAge: 7 * 24 * 60 * 60, // 7 days
@@ -68,6 +121,26 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+
+        // Demo mode - use demo users
+        if (isDemo) {
+          const demoUser = demoUsers[credentials.email.toLowerCase()];
+          if (demoUser && demoUser.password === credentials.password) {
+            return {
+              id: demoUser.id,
+              email: demoUser.email,
+              name: demoUser.name,
+              role: demoUser.role,
+              avatar: null,
+            };
+          }
+          return null;
+        }
+
+        // Production mode - use database
+        if (!db) {
           return null;
         }
 

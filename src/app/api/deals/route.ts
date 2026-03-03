@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db, isDemo } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { 
+  mockDeals, mockClients, mockUsers,
+  enrichDeals 
+} from "@/lib/mock-data";
 
 // GET - List all deals
 export async function GET(request: NextRequest) {
   try {
+    // Demo mode - return mock data
+    if (isDemo) {
+      const enrichedDeals = enrichDeals(mockDeals, mockClients, mockUsers);
+      return NextResponse.json(enrichedDeals);
+    }
+
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -13,6 +23,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const stage = searchParams.get("stage");
     const clientId = searchParams.get("clientId");
+    const minValue = searchParams.get("minValue");
+    const maxValue = searchParams.get("maxValue");
 
     const where: any = {};
 
@@ -29,7 +41,17 @@ export async function GET(request: NextRequest) {
       where.clientId = clientId;
     }
 
-    const deals = await db.deal.findMany({
+    if (minValue || maxValue) {
+      where.value = {};
+      if (minValue) {
+        where.value.gte = parseFloat(minValue);
+      }
+      if (maxValue) {
+        where.value.lte = parseFloat(maxValue);
+      }
+    }
+
+    const deals = await db!.deal.findMany({
       where,
       include: {
         client: true,
@@ -42,13 +64,19 @@ export async function GET(request: NextRequest) {
             avatar: true,
           },
         },
-        _count: {
+        tasks: {
           select: {
-            tasks: true,
+            id: true,
+            title: true,
+            status: true,
+            priority: true,
           },
         },
       },
-      orderBy: { updatedAt: "desc" },
+      orderBy: [
+        { stage: "asc" },
+        { createdAt: "desc" },
+      ],
     });
 
     return NextResponse.json(deals);
@@ -64,6 +92,22 @@ export async function GET(request: NextRequest) {
 // POST - Create a new deal
 export async function POST(request: NextRequest) {
   try {
+    // Demo mode - return mock response
+    if (isDemo) {
+      const body = await request.json();
+      const newDeal = {
+        id: `deal-${Date.now()}`,
+        ...body,
+        stage: body.stage || "LEAD",
+        probability: body.probability || 10,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        owner: mockUsers[0],
+        client: body.clientId ? mockClients.find(c => c.id === body.clientId) : undefined,
+      };
+      return NextResponse.json(newDeal);
+    }
+
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -73,27 +117,34 @@ export async function POST(request: NextRequest) {
     const {
       title,
       description,
-      value = 0,
+      value,
       stage = "LEAD",
-      probability = 0,
+      probability = 10,
       expectedClose,
       clientId,
     } = body;
 
-    if (!title || !clientId) {
+    if (!title) {
       return NextResponse.json(
-        { error: "Title and client are required" },
+        { error: "Title is required" },
         { status: 400 }
       );
     }
 
-    const deal = await db.deal.create({
+    if (!clientId) {
+      return NextResponse.json(
+        { error: "Client is required" },
+        { status: 400 }
+      );
+    }
+
+    const deal = await db!.deal.create({
       data: {
         title,
         description,
-        value,
+        value: parseFloat(value) || 0,
         stage,
-        probability,
+        probability: parseInt(probability) || 0,
         expectedClose: expectedClose ? new Date(expectedClose) : null,
         clientId,
         ownerId: user.id,

@@ -1,17 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db, isDemo } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { 
+  mockClients, mockUsers,
+  enrichClients 
+} from "@/lib/mock-data";
 
 // GET - List all clients
 export async function GET(request: NextRequest) {
   try {
+    // Demo mode - return mock data
+    if (isDemo) {
+      const enrichedClients = enrichClients(mockClients, mockUsers);
+      return NextResponse.json(enrichedClients);
+    }
+
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get("search");
     const status = searchParams.get("status");
 
     const where: any = {};
@@ -21,19 +30,11 @@ export async function GET(request: NextRequest) {
       where.ownerId = user.id;
     }
 
-    if (search) {
-      where.OR = [
-        { name: { contains: search } },
-        { email: { contains: search } },
-        { company: { contains: search } },
-      ];
-    }
-
     if (status) {
       where.status = status;
     }
 
-    const clients = await db.client.findMany({
+    const clients = await db!.client.findMany({
       where,
       include: {
         owner: {
@@ -52,7 +53,9 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: { updatedAt: "desc" },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
 
     return NextResponse.json(clients);
@@ -68,6 +71,21 @@ export async function GET(request: NextRequest) {
 // POST - Create a new client
 export async function POST(request: NextRequest) {
   try {
+    // Demo mode - return mock response
+    if (isDemo) {
+      const body = await request.json();
+      const newClient = {
+        id: `client-${Date.now()}`,
+        ...body,
+        status: body.status || "active",
+        ownerId: "user-admin",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        owner: mockUsers[0],
+      };
+      return NextResponse.json(newClient);
+    }
+
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -93,7 +111,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const client = await db.client.create({
+    const client = await db!.client.create({
       data: {
         name,
         email,

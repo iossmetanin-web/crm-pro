@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db, isDemo } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { 
+  mockTasks, mockClients, mockDeals, mockUsers,
+  enrichTasks 
+} from "@/lib/mock-data";
 
 // GET - List all tasks
 export async function GET(request: NextRequest) {
   try {
+    // Demo mode - return mock data
+    if (isDemo) {
+      const enrichedTasks = enrichTasks(mockTasks, mockClients, mockDeals);
+      return NextResponse.json(enrichedTasks);
+    }
+
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -60,7 +70,7 @@ export async function GET(request: NextRequest) {
       where.status = { not: "DONE" };
     }
 
-    const tasks = await db.task.findMany({
+    const tasks = await db!.task.findMany({
       where,
       include: {
         client: true,
@@ -111,6 +121,24 @@ export async function GET(request: NextRequest) {
 // POST - Create a new task
 export async function POST(request: NextRequest) {
   try {
+    // Demo mode - return mock response
+    if (isDemo) {
+      const body = await request.json();
+      const newTask = {
+        id: `task-${Date.now()}`,
+        ...body,
+        status: body.status || "TODO",
+        priority: body.priority || "MEDIUM",
+        completedAt: null,
+        parentId: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        owner: mockUsers[0],
+        client: body.clientId ? mockClients.find(c => c.id === body.clientId) : undefined,
+      };
+      return NextResponse.json(newTask);
+    }
+
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -135,7 +163,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const task = await db.task.create({
+    const task = await db!.task.create({
       data: {
         title,
         description,
@@ -163,7 +191,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Create task log
-    await db.taskLog.create({
+    await db!.taskLog.create({
       data: {
         taskId: task.id,
         userId: user.id,
